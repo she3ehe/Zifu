@@ -127,7 +127,7 @@ class User(UserMixin, db.Model):
         if self.email is not None and self.avatar_hash is None:
             self.avatar_hash = hashlib.md5(
                 self.email.encode('utf-8')).hexdigest()
-        self.followed.append(Follow(followed=self))
+        self.follow(self)
 
     @property
     def password(self):
@@ -210,7 +210,7 @@ class User(UserMixin, db.Model):
         if request.is_secure:
             url = 'https://secure.gravatar.com/avatar'
         else:
-            url = 'http://www.gravatar.com/avatar'
+            url = 'http://cn.gravatar.com/avatar'
         hash = self.avatar_hash or hashlib.md5(
             self.email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
@@ -313,10 +313,14 @@ class Post(db.Model):
     def on_changed_body(target, value, oldvalue, initiator):
         allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
                         'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
-                        'h1', 'h2', 'h3', 'p']
+                        'h1', 'h2', 'h3', 'p','img']
+        allowed_attrs = {'img': ['src', 'alt']}
+#        target.body_html = bleach.linkify(bleach.clean(
+#            markdown(value, output_format='html'),
+#            tags=allowed_tags, strip=True))
         target.body_html = bleach.linkify(bleach.clean(
             markdown(value, output_format='html'),
-            tags=allowed_tags, strip=True))
+            tags=allowed_tags, strip=True, attributes=allowed_attrs))
 
     def to_json(self):
         json_post = {

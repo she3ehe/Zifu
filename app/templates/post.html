@@ -5,7 +5,11 @@
 {% block title %}Flasky - Post{% endblock %}
 
 {% block page_content %}
-{% include '_posts.html' %}
+{% if 1 %}
+{% include '_postposts.html' %}
+{% else %}
+
+{% endif %}
 <h4 id="comments">Comments</h4>
 {% if current_user.can(Permission.COMMENT) %}
 <div class="comment-form">
