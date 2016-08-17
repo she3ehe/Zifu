@@ -5,7 +5,11 @@
 
 {% block page_content %}
 <div class="page-header">
+    {% if user.use_default_avatar %}
     <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}">
+    {% else %}
+    <img class="img-rounded profile-thumbnail" src="{{ url_for('static', filename= 'avatar/' + user.avatar_hash + '.jpg')}} ">
+    {% endif %}
     <div class="profile-header">
         <h1>{{ user.username }}</h1>
         {% if user.name or user.location %}

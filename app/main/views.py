@@ -1,3 +1,4 @@
+import os
 from flask import render_template, redirect, url_for, abort, flash, request,\
     current_app, make_response
 from flask.ext.login import login_required, current_user
@@ -8,7 +9,8 @@ from .forms import EditProfileForm, EditProfileAdminForm, PostForm,\
 from .. import db
 from ..models import Permission, Role, User, Post, Comment
 from ..decorators import admin_required, permission_required
-
+from PIL import Image
+from werkzeug import secure_filename
 
 @main.after_app_request
 def after_request(response):
@@ -268,3 +270,24 @@ def moderate_disable(id):
     db.session.add(comment)
     return redirect(url_for('.moderate',
                             page=request.args.get('page', 1, type=int)))
+
+@main.route('/edit-avatar', methods=['GET', 'POST'])
+@login_required
+def change_avatar():
+    if request.method == 'POST':
+        file = request.files['file']
+        size = (256, 256)
+        im = Image.open(file)
+        im.thumbnail(size)
+        if file: #and allowed_file(file.filename):
+            user = current_user._get_current_object()
+            filename = user.avatar_hash + '.jpg'
+            user.use_default_avatar = False
+            db.session.add(user)
+#            filename = secure_filename(file.filename)
+            im.save(os.path.join('app','static', 'avatar', filename))
+#            current_user.new_avatar_file = url_for('main.static', filename='%s/%s' % ('avatar', filename))
+#            current_user.is_avatar_default = False
+            flash(u'avatart changed')
+            return redirect(url_for('.index'))
+    return render_template('edit_avatar.html')

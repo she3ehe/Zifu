@@ -100,7 +100,7 @@ div.post-body{
 }
 
 div.postpost-body{
-  
+
 }
 .post-body .text{
   position: absolute;
@@ -120,4 +120,25 @@ div.postpost-body{
 }
 .table.followers tr {
     border-bottom: 1px solid #e0e0e0;
+}
+div.up-count-down{
+  width:  20px;
+  float:  left;
+  height: 110px;
+  background-color:#EEEEEE;
+}
+div.up{
+  height: 15px;
+  background-color:#ffff99;
+}
+div.question{
+  height: 15px;
+  background-color:#ffff99;
+}
+div.author{
+  height: 15px;
+}
+div.answer{
+  height: 80px;
+  background-color:#ffff99;
 }
