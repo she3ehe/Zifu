@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Flasky - Post{% endblock %}
+
+{% block page_content %}
+<ul class="posts">
+    {% for answer in answers %}
+    <li class="post">
+        <div class="post-thumbnail">
+            <a href="{{ url_for('.user', username=answer.author.username) }}">
+                {% if answer.author.use_default_avatar %}
+                <img class="img-rounded profile-thumbnail" src="{{ answer.author.gravatar(size=40) }}">
+                {% else %}
+                <img class="img-rounded profile-thumbnail" src="{{ url_for('static', filename= 'avatar/' + answer.author.avatar_hash + '.jpg')}} " height="40" width="40">
+                {% endif %}
+
+            </a>
+        </div>
+        <div class="post-content">
+            <div class="post-date">{{ moment(answer.timestamp).fromNow() }}</div>
+            <div class="post-author"><a href="{{ url_for('.user', username=answer.author.username) }}">{{ answer.author.username }}</a></div>
+            <div class="post-body">
+                {% if answer.body_html %}
+                    {{ answer.body_html | safe }}
+                {% else %}
+                    {{ answer.body }}
+                {% endif %}
+            </div>
+            <div class="post-footer">
+                {% if current_user == answer.author %}
+                <a href="{{ url_for('.edit', id=answer.id) }}">
+                    <span class="label label-primary">Edit</span>
+                </a>
+                {% elif current_user.is_administrator() %}
+                <a href="{{ url_for('.edit', id=answer.id) }}">
+                    <span class="label label-danger">Edit [Admin]</span>
+                </a>
+                {% endif %}
+                <a  href="{{ url_for('.upvote', ans_id=answer.id) }}">
+                    <span class="label label-danger">Up</span>
+                </a>
+                <a  href="{{ url_for('.downvote', ans_id=answer.id) }}">
+                    <span class="label label-danger">Down</span>
+                </a>
+
+                <span class="label label-primary">{{ answer.abs_upvote() }} Upvotes</span>
+                <span class="label label-primary">{{ answer.comments.count() }} Comments</span>
+            </div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+
+<h4 id="comments">Answers</h4>
+{% if current_user.can(Permission.COMMENT) %}
+<div class="comment-form">
+    {{ wtf.quick_form(form) }}
+</div>
+{% endif %}
+{% include '_comments.html' %}
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, '.question', fragment='#comments', id=answers[0].id) }}
+</div>
+{% endif %}
+{% endblock %}

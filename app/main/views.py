@@ -4,13 +4,18 @@ from flask import render_template, redirect, url_for, abort, flash, request,\
 from flask.ext.login import login_required, current_user
 from flask.ext.sqlalchemy import get_debug_queries
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, PostForm,\
-    CommentForm
+from .forms import EditProfileForm, EditProfileAdminForm, QuestionForm,\
+    AnswerForm, CommentForm
 from .. import db
-from ..models import Permission, Role, User, Post, Comment
+from ..models import Permission, Role, User, Question, Answer, Comment, Desc, Upvote
 from ..decorators import admin_required, permission_required
 from PIL import Image
 from werkzeug import secure_filename
+
+def redirect_url(default='main.index'):
+    return request.args.get('next') or \
+           request.referrer or \
+           url_for(default)
 
 @main.after_app_request
 def after_request(response):
@@ -36,34 +41,36 @@ def server_shutdown():
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
-    form = PostForm()
+    form = QuestionForm()
     if current_user.can(Permission.WRITE_ARTICLES) and \
             form.validate_on_submit():
-        post = Post(body=form.body.data,
+        q = Question(body=form.body.data,
                     author=current_user._get_current_object())
-        db.session.add(post)
+        db.session.add(q)
         return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
     show_followed = False
     if current_user.is_authenticated:
         show_followed = bool(request.cookies.get('show_followed', ''))
     if show_followed:
-        query = current_user.followed_posts
+        # query = current_user.followed_posts
+        feed = current_user.feed
+        # pagination = Pagination(page=page,total=len(feed),per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],record_name='feeds')
     else:
-        query = Post.query
-    pagination = query.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
-        error_out=False)
-    posts = pagination.items
-    return render_template('index.html', form=form, posts=posts,
-                           show_followed=show_followed, pagination=pagination)
+        query = Question.query
+        pagination = query.order_by(Question.timestamp.desc()).paginate(
+            page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
+            error_out=False)
+        feed = pagination.items
+    return render_template('index.html', form=form, feeds=feed,
+                           show_followed=show_followed)
 
 
 @main.route('/user/<username>')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
-    pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
+    pagination = user.questions.order_by(Question.timestamp.desc()).paginate(
         page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
@@ -115,43 +122,66 @@ def edit_profile_admin(id):
     return render_template('edit_profile.html', form=form, user=user)
 
 
-@main.route('/post/<int:id>', methods=['GET', 'POST'])
-def post(id):
-    post = Post.query.get_or_404(id)
+@main.route('/question/<int:id>', methods=['GET', 'POST'])
+def question(id):
+    q = Question.query.get_or_404(id)
+    form = AnswerForm()
+    if form.validate_on_submit():
+        answer = Answer(body=form.body.data,
+                          question=q,
+                          author=current_user._get_current_object())
+        db.session.add(answer)
+        flash('Your answer has been published.')
+        return redirect(url_for('.question', id=q.id, page=-1))
+    page = request.args.get('page', 1, type=int)
+    if page == -1:
+        page = (q.answers.count() - 1) // \
+            current_app.config['FLASKY_COMMENTS_PER_PAGE'] + 1
+    pagination = q.answers.order_by(Answer.timestamp.asc()).paginate(
+        page, per_page=current_app.config['FLASKY_COMMENTS_PER_PAGE'],
+        error_out=False)
+    answers = pagination.items
+    return render_template('question.html', questions=[q], form=form,
+                           answers=answers, pagination=pagination)
+
+@main.route('/answer/<int:id>', methods=['GET', 'POST'])
+def answer(id):
+    a = Answer.query.get_or_404(id)
     form = CommentForm()
     if form.validate_on_submit():
         comment = Comment(body=form.body.data,
-                          post=post,
-                          author=current_user._get_current_object())
+                            answer=a,
+                            author=current_user._get_current_object())
         db.session.add(comment)
-        flash('Your comment has been published.')
-        return redirect(url_for('.post', id=post.id, page=-1))
+        flash('Your comment has been published')
+        return redirect(url_for('.answer',id=id, page=-1))
     page = request.args.get('page', 1, type=int)
     if page == -1:
-        page = (post.comments.count() - 1) // \
+        page = (a.comments.count() - 1) // \
             current_app.config['FLASKY_COMMENTS_PER_PAGE'] + 1
-    pagination = post.comments.order_by(Comment.timestamp.asc()).paginate(
+    pagination = a.comments.order_by(Comment.timestamp.asc()).paginate(
         page, per_page=current_app.config['FLASKY_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
-    return render_template('post.html', posts=[post], form=form,
+    return render_template('answer.html', answers=[a], form=form,
                            comments=comments, pagination=pagination)
+
 
 
 @main.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
-    post = Post.query.get_or_404(id)
-    if current_user != post.author and \
+    q = Question.query.get_or_404(id)
+    if current_user != q.author and \
             not current_user.can(Permission.ADMINISTER):
         abort(403)
-    form = PostForm()
+    form = QuestionForm()
     if form.validate_on_submit():
-        post.body = form.body.data
-        db.session.add(post)
-        flash('The post has been updated.')
-        return redirect(url_for('.post', id=post.id))
-    form.body.data = post.body
+        q.body = form.body.data
+        db.session.add(q)
+        flash('The question has been updated.')
+        return redirect(url_for('.question', id=q.id))
+    form.body.data = q.body
     return render_template('edit_post.html', form=form)
 
 
@@ -220,6 +250,35 @@ def followed_by(username):
                            endpoint='.followed_by', pagination=pagination,
                            follows=follows)
 
+
+@main.route('/upvote/<int:ans_id>')
+@login_required
+def upvote(ans_id):
+    answer = Answer.query.filter_by(id=ans_id).first()
+    if answer is None:
+        flash('Invalid Question.')
+        return redirect(redirect_url())
+    author = current_user._get_current_object()
+    if current_user.has_upvoted(answer):
+        flash('You has upvoted this answer')
+        return redirect(redirect_url())
+    current_user.up_answer(answer)
+    # return redirect(url_for('.answer', id=ans_id))
+    return redirect(redirect_url())
+
+@main.route('/downvote/<int:ans_id>')
+@login_required
+def downvote(ans_id):
+    answer = Answer.query.filter_by(id=ans_id).first()
+    if answer is None:
+        flash('Invalid Question.')
+        return redirect(redirect_url())
+    author = current_user._get_current_object()
+    if current_user.has_downvoted(answer):
+        flash('You has downvoted this answer')
+        return redirect(redirect_url())
+    current_user.down_answer(answer)
+    return redirect(redirect_url())
 
 @main.route('/all')
 @login_required

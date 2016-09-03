@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
-{% import "_macros.html" as macros %}
 
 {% block title %}Flasky{% endblock %}
 
@@ -20,12 +19,10 @@
         <li{% if show_followed %} class="active"{% endif %}><a href="{{ url_for('.show_followed') }}">关注的用户</a></li>
         {% endif %}
     </ul>
-    {% include '_posts.html' %}
+    {% include '_feeds.html' %}
 </div>
 {% if pagination %}
-<div class="pagination">
-    {{ macros.pagination_widget(pagination, '.index') }}
-</div>
+
 {% endif %}
 {% endblock %}
 

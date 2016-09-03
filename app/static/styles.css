@@ -31,6 +31,9 @@ div.post-date {
 div.post-author {
     font-weight: bold;
 }
+.post-author a{
+  color:#999
+}
 div.post-thumbnail {
     position: absolute;
 }
@@ -40,6 +43,12 @@ div.post-content {
 }
 div.post-footer {
     text-align: right;
+}
+.updown{
+    text-align: left;
+}
+div.post-footer2{
+    text-align: left;
 }
 ul.comments {
     list-style-type: none;
@@ -96,7 +105,6 @@ div.flask-pagedown-preview h3 {
 div.post-body{
     position: relative;
     height: 100px;
-    overflow: hidden;
 }
 
 div.postpost-body{
@@ -131,14 +139,38 @@ div.up{
   height: 15px;
   background-color:#ffff99;
 }
-div.question{
+/*div.question{
   height: 15px;
   background-color:#ffff99;
-}
+}*/
 div.author{
   height: 15px;
 }
 div.answer{
   height: 80px;
   background-color:#ffff99;
+}
+div.question-body{
+  position: relative;
+}
+.question-body p{
+    font-size: 120%;
+    color:#259
+    /*margin-bottom:0;*/
+    /*font-weight:bold;*/
+}
+.pagination-page-info {
+    padding: .6em;
+    padding-left: 0;
+    width: 40em;
+    margin: .5em;
+    margin-left: 0;
+    font-size: 12px;
+}
+.pagination-page-info b {
+    color: black;
+    background: #6aa6ed;
+    padding-left: 2px;
+    padding: .1em .25em;
+    font-size: 150%;
 }

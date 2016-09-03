@@ -1,0 +1,158 @@
+<ul class="posts">
+    {% for feed in feeds %}
+    {% if feed.desc.name == 'Question'%}
+    <li class="post">
+        <div class="post-thumbnail">
+            <a href="{{ url_for('.user', username=feed.author.username) }}">
+                {% if feed.author.use_default_avatar %}
+                <img class="img-rounded profile-thumbnail" src="{{ feed.author.gravatar(size=40) }}">
+                {% else %}
+                <img class="img-rounded profile-thumbnail" src="{{ url_for('static', filename= 'avatar/' + feed.author.avatar_hash + '.jpg')}} " height="40" width="40">
+                {% endif %}
+
+            </a>
+        </div>
+        <div class="post-content">
+            <div class="post-date">{{ moment(feed.timestamp).fromNow() }}</div>
+            <div class="post-author"><a href="{{ url_for('.user', username=feed.author.username) }}">{{ feed.author.username +' '+ feed.desc.body}}</a></div>
+            <div class="question-body">
+                  {% if feed.body_html %}
+                      {{ feed.body_html | safe }}
+                  {% else %}
+                      {{ feed.body }}
+                  {% endif %}
+            </div>
+            <div class="post-footer">
+                {% if current_user == feed.author %}
+                <a href="{{ url_for('.edit', id=feed.id) }}">
+                    <span class="label label-primary">Edit</span>
+                </a>
+                {% elif current_user.is_administrator() %}
+                <a href="{{ url_for('.edit', id=feed.id) }}">
+                    <span class="label label-danger">Edit [Admin]</span>
+                </a>
+                {% endif %}
+                <a href="{{ url_for('.question', id=feed.id) }}">
+                    <span class="label label-default">Permalink</span>
+                </a>
+                <a href="{{ url_for('.question', id=feed.id) }}#comments">
+                    <span class="label label-primary">{{ feed.answers.count() }} Answers</span>
+                </a>
+            </div>
+        </div>
+    </li>
+    {% endif%}
+
+    {% if feed.desc.name == 'Answer'%}
+    <li class="post">
+        <div class="post-thumbnail">
+            <a href="{{ url_for('.user', username=feed.author.username) }}">
+                {% if feed.author.use_default_avatar %}
+                <img class="img-rounded profile-thumbnail" src="{{ feed.author.gravatar(size=40) }}">
+                {% else %}
+                <img class="img-rounded profile-thumbnail" src="{{ url_for('static', filename= 'avatar/' + feed.author.avatar_hash + '.jpg')}} " height="40" width="40">
+                {% endif %}
+
+            </a>
+        </div>
+        <div class="post-content">
+            <div class="post-date">{{ moment(feed.timestamp).fromNow() }}</div>
+            <div class="post-author"><a href="{{ url_for('.user', username=feed.author.username) }}">{{ feed.author.username +' '+ feed.desc.body}}</a></div>
+            <div class="question-body">
+                  {% if feed.question.body_html %}
+                      {{ feed.question.body_html | safe }}
+                  {% else %}
+                      {{ feed.question.body }}
+                  {% endif %}
+            </div>
+            <div class="question-body">
+                  {% if feed.body_html %}
+                      {{ feed.body_html | safe }}
+                  {% else %}
+                      {{ feed.body }}
+                  {% endif %}
+            </div>
+            <div class="post-footer">
+                {% if current_user == feed.author %}
+                <a href="{{ url_for('.edit', id=feed.id) }}">
+                    <span class="label label-primary">Edit</span>
+                </a>
+                {% elif current_user.is_administrator() %}
+                <a href="{{ url_for('.edit', id=feed.id) }}">
+                    <span class="label label-danger">Edit [Admin]</span>
+                </a>
+                {% endif %}
+                <a  href="{{ url_for('.upvote', ans_id=feed.id) }}">
+                    <span class="label label-danger">Up</span>
+                </a>
+                <a  href="{{ url_for('.downvote', ans_id=feed.id) }}">
+                    <span class="label label-danger">Down</span>
+                </a>
+                <a href="{{ url_for('.answer', id=feed.id) }}">
+                    <span class="label label-default">Full answer</span>
+                </a>
+                <a href="{{ url_for('.answer', id=feed.id) }}#comments">
+                    <span class="label label-primary">{{ feed.abs_upvote() }} Upvotes</span>
+                </a>
+                <a href="{{ url_for('.answer', id=feed.id) }}#comments">
+                    <span class="label label-primary">{{ feed.comments.count() }} Comments</span>
+                </a>
+
+            </div>
+        </div>
+    </li>
+    {% endif%}
+
+    {% if feed.desc.name == 'Upvote'%}
+    <li class="post">
+        <div class="post-thumbnail">
+            <a href="{{ url_for('.user', username=feed.author.username) }}">
+                {% if feed.author.use_default_avatar %}
+                <img class="img-rounded profile-thumbnail" src="{{ feed.author.gravatar(size=40) }}">
+                {% else %}
+                <img class="img-rounded profile-thumbnail" src="{{ url_for('static', filename= 'avatar/' + feed.author.avatar_hash + '.jpg')}} " height="40" width="40">
+                {% endif %}
+
+            </a>
+        </div>
+        <div class="post-content">
+            <div class="post-date">{{ moment(feed.timestamp).fromNow() }}</div>
+            <div class="post-author"><a href="{{ url_for('.user', username=feed.author.username) }}">{{ feed.author.username +' '+ feed.desc.body}}</a></div>
+            <div class="question-body">
+                  {% if feed.answer.question.body_html %}
+                      {{ feed.answer.question.body_html | safe }}
+                  {% else %}
+                      {{ feed.answer.question.body }}
+                  {% endif %}
+                  <div class="post-author"><a href="{{ url_for('.user', username=feed.answer.author.username) }}">{{ feed.answer.author.username}}</a></div>
+            </div>
+            <div class="question-body">
+                  {% if feed.answer.body_html %}
+                      {{ feed.answer.body_html | safe }}
+                  {% else %}
+                      {{ feed.answer.body }}
+                  {% endif %}
+            </div>
+            <div class="post-footer">
+                <a  href="{{ url_for('.upvote', ans_id=feed.answer.id) }}">
+                    <span class="label label-danger">Up</span>
+                </a>
+                <a  href="{{ url_for('.downvote', ans_id=feed.answer.id) }}">
+                    <span class="label label-danger">Down</span>
+                </a>
+                <a href="{{ url_for('.answer', id=feed.answer.id) }}">
+                    <span class="label label-default">Full answer</span>
+                </a>
+                <a href="{{ url_for('.answer', id=feed.answer.id) }}#comments">
+                    <span class="label label-primary">{{ feed.answer.abs_upvote() }} Upvotes</span>
+                </a>
+                <a href="{{ url_for('.answer', id=feed.answer.id) }}#comments">
+                    <span class="label label-primary">{{ feed.answer.comments.count() }} Comments</span>
+                </a>
+            </div>
+        </div>
+    </li>
+    {% endif%}
+
+    {% endfor %}
+</ul>
