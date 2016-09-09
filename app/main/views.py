@@ -141,7 +141,7 @@ def question(id):
         page, per_page=current_app.config['FLASKY_COMMENTS_PER_PAGE'],
         error_out=False)
     answers = pagination.items
-    return render_template('question.html', questions=[q], form=form,
+    return render_template('question.html', question=q, form=form,
                            answers=answers, pagination=pagination)
 
 @main.route('/answer/<int:id>', methods=['GET', 'POST'])
@@ -163,7 +163,7 @@ def answer(id):
         page, per_page=current_app.config['FLASKY_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
-    return render_template('answer.html', answers=[a], form=form,
+    return render_template('answer.html', answer=a, form=form,
                            comments=comments, pagination=pagination)
 
 
@@ -279,6 +279,17 @@ def downvote(ans_id):
         return redirect(redirect_url())
     current_user.down_answer(answer)
     return redirect(redirect_url())
+
+@main.route('/notification/<int:id>')
+@login_required
+def notification(id):
+    if current_user.id != id:
+        flash('Permission denied')
+        return redirect(redirect_url())
+    n = current_user.notification
+    # u = User.query.get(id)
+    # n = u.notification
+    return render_template('notification.html',infos=n)
 
 @main.route('/all')
 @login_required

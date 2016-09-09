@@ -291,6 +291,19 @@ class User(UserMixin, db.Model):
         feed.sort(key=lambda x:x.timestamp,reverse=True)
         return feed
 
+    @property
+    def notification(self):
+        n = []
+    # all answers for user's questions
+        for question in self.questions:
+            for answer in question.answers:
+                n.append(answer)
+        for answer in self.answers:
+            for upvote in answer.upvotes :
+                if(upvote.value):
+                    n.append(upvote)
+        n.sort(key=lambda x:x.timestamp,reverse=True)
+        return n
     # def to_json(self):
     #     json_user = {
     #         'url': url_for('api.get_user', id=self.id, _external=True),
@@ -348,10 +361,10 @@ class Desc(db.Model):
     upvotes = db.relationship('Upvote',backref='desc', lazy='dynamic')
     @staticmethod
     def insert_desc():
-        desc = {'Question':'add a Question',
-                'Answer':'add a Answer',
-                'Comment':'add a Comment',
-                'Upvote':'Upvote for this answer'}
+        desc = {'Question':'adds a question',
+                'Answer':'adds a answer',
+                'Comment':'adds a comment',
+                'Upvote':'upvotes for this answer'}
         for k,v in desc.items():
             q = Desc.query.filter_by(name = k).first()
             if q is None:
