@@ -69,14 +69,20 @@ def deploy():
     from app.models import Role, User
 
     # migrate database to latest revision
-#    upgrade()
+    # upgrade()
 
     # create user roles
     Role.insert_roles()
-
+    # create description for question, answer ,upvote and comment
+    Desc.insert_desc()
+    User.generate_fake()
     # create self-follows for all users
     User.add_self_follows()
-
+    Follow.generate_fake()
+    Question.generate_fake()
+    Answer.generate_fake()
+    Comment.generate_fake()
+    Upvote.generate_fake()
 
 if __name__ == '__main__':
     manager.run()

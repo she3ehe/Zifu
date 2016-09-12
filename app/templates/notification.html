@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}{% block page_content %}
+
 <div class="post-tabs">
 <ul class="posts">
     {% for info in infos %}
@@ -38,7 +39,6 @@
                 </a>
                 <a href="{{ url_for('.answer', id=info.id) }}#comments">
                     <span class="label label-primary">{{ info.abs_upvote() }} Upvotes</span>
-                </a>feed
                 <a href="{{ url_for('.answer', id=info.id) }}#comments">
                     <span class="label label-primary">{{ info.comments.count() }} Comments</span>
                 </a>
@@ -85,6 +85,50 @@
                     <span class="label label-primary">{{ info.answer.abs_upvote() }} Upvotes</span>
                 </a>
                 <a href="{{ url_for('.answer', id=info.answer.id) }}#comments">
+                    <span class="label label-primary">{{ info.answer.comments.count() }} Comments</span>
+                </a>
+            </div>
+        </div>
+    </li>
+    {% endif%}
+
+    {% if info.desc.name == 'Comment'%}
+    <li class="post">
+        <div class="post-thumbnail">
+            <a href="{{ url_for('.user', username=info.author.username) }}">
+                {% if info.author.use_default_avatar %}
+                <img class="img-rounded profile-thumbnail" src="{{ info.author.gravatar(size=40) }}">
+                {% else %}
+                <img class="img-rounded profile-thumbnail" src="{{ url_for('static', filename= 'avatar/' + info.author.avatar_hash + '.jpg')}} " height="40" width="40">
+                {% endif %}
+
+            </a>
+        </div>
+        <div class="post-content">
+            <div class="post-date">{{ moment(info.timestamp).fromNow() }}</div>
+            <div class="post-author"><a href="{{ url_for('.user', username=info.author.username) }}">{{ info.author.username +' '+ 'comments your answer'}}</a></div>
+            <div class="question-body">
+                  {% if info.answer.body_html %}
+                      {{ info.answer.body_html | safe }}
+                  {% else %}
+                      {{ info.answer.body }}
+                  {% endif %}
+            </div>
+            <span> &nbsp   </span>
+            <div class="question-body">
+                  {% if info.body_html %}
+                      {{ info.body_html | safe }}
+                  {% else %}
+                      {{ info.body }}
+                  {% endif %}
+            </div>
+            <div class="post-footer">
+                <a href="{{ url_for('.answer', id=info.answer.id) }}">
+                    <span class="label label-default">Full answer</span>
+                </a>
+                <a href="{{ url_for('.answer', id=info.id) }}#comments">
+                    <span class="label label-primary">{{ info.answer.abs_upvote() }} Upvotes</span>
+                <a href="{{ url_for('.answer', id=info.id) }}#comments">
                     <span class="label label-primary">{{ info.answer.comments.count() }} Comments</span>
                 </a>
             </div>

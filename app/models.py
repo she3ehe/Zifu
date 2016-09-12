@@ -59,6 +59,17 @@ class Follow(db.Model):
                             primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+    @staticmethod
+    def generate_fake():
+        user_count = User.query.count()
+        for x in range(1,user_count+1):
+            follower = User.query.get(x)
+            for y in range(10):
+                followed = User.query.get((x+y)%user_count+1)
+                f = Follow(followed=followed,follower=follower)
+                db.session.add(f)
+        db.session.commit()
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -100,7 +111,7 @@ class User(UserMixin, db.Model):
         for i in range(count):
             u = User(email=forgery_py.internet.email_address(),
                      username=forgery_py.internet.user_name(True),
-                     password=forgery_py.lorem_ipsum.word(),
+                     password='Aa123456',
                      confirmed=True,
                      name=forgery_py.name.full_name(),
                      location=forgery_py.address.city(),
@@ -302,6 +313,8 @@ class User(UserMixin, db.Model):
             for upvote in answer.upvotes :
                 if(upvote.value):
                     n.append(upvote)
+            for comment in answer.comments:
+                n.append(comment)
         n.sort(key=lambda x:x.timestamp,reverse=True)
         return n
     # def to_json(self):
@@ -473,7 +486,7 @@ class Answer(db.Model):
             tags=allowed_tags, strip=True))
 
     @staticmethod
-    def generate_fake(count=100):
+    def generate_fake(count=400):
         from random import seed, randint
         import forgery_py
 
@@ -484,6 +497,8 @@ class Answer(db.Model):
             # d = Desc.query.filter_by(name = 'Answer').first()
             u = User.query.offset(randint(0, user_count - 1)).first()
             q = Question.query.offset(randint(0,question_count - 1)).first()
+            if(Answer.query.filter_by(author=u,question=q).first()):
+                continue
             p = Answer(body=forgery_py.lorem_ipsum.sentences(randint(1, 5)),
                      timestamp=forgery_py.date.date(True),
                      author=u,
@@ -530,7 +545,7 @@ class Comment(db.Model):
         self.desc = d
 
     @staticmethod
-    def generate_fake(count=100):
+    def generate_fake(count=700):
         from random import seed, randint
         import forgery_py
 
@@ -541,6 +556,8 @@ class Comment(db.Model):
             # d = Desc.query.filter_by(name = 'Comment').first()
             u = User.query.offset(randint(0, user_count - 1)).first()
             a = Answer.query.offset(randint(0,answer_count - 1)).first()
+            if(Comment.query.filter_by(author=u,answer=a).first()):
+                continue
             p = Comment(body=forgery_py.lorem_ipsum.sentences(randint(1, 5)),
                      timestamp=forgery_py.date.date(True),
                      author=u,
@@ -565,7 +582,7 @@ class Upvote(db.Model):
         self.desc = d
 
     @staticmethod
-    def generate_fake(count=100):
+    def generate_fake(count=500):
         from random import seed, randint
         import forgery_py
 

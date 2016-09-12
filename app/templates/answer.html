@@ -2,7 +2,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "_macros.html" as macros %}
 
-{% block title %}Flasky - Post{% endblock %}
+{% block title %}Zifu - Post{% endblock %}
 
 {% block page_content %}
 <div class="post-thumbnail">
@@ -26,6 +26,12 @@
                 {{ answer.question.body }}
             {% endif %}
       </div>
+  <div class="post-footer">
+      <a href="{{ url_for('.question', id=answer.question.id) }}">
+          <span class="label label-primary">Link</span>
+      </a>
+
+
 </li>
 
 <ul class="posts">
@@ -74,7 +80,7 @@
     </li>
 </ul>
 
-<h4 id="comments">Answers</h4>
+<h4 id="comments">Comments</h4>
 {% if current_user.can(Permission.COMMENT) %}
 <div class="comment-form">
     {{ wtf.quick_form(form) }}
@@ -82,8 +88,5 @@
 {% endif %}
 {% include '_comments.html' %}
 {% if pagination %}
-<div class="pagination">
-    {{ macros.pagination_widget(pagination, '.question', fragment='#comments', id=answer) }}
-</div>
 {% endif %}
 {% endblock %}
