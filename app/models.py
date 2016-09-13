@@ -317,6 +317,19 @@ class User(UserMixin, db.Model):
                 n.append(comment)
         n.sort(key=lambda x:x.timestamp,reverse=True)
         return n
+
+    @property
+    def profile_context(self):
+        context = []
+        for question in self.questions:
+            context.append(question)
+        for answer in self.answers:
+            context.append(answer)
+        for upvote in self.upvotes:
+            context.append(upvote)
+        context.sort(key=lambda x:x.timestamp,reverse=True)
+        return context
+
     # def to_json(self):
     #     json_user = {
     #         'url': url_for('api.get_user', id=self.id, _external=True),
@@ -375,9 +388,9 @@ class Desc(db.Model):
     @staticmethod
     def insert_desc():
         desc = {'Question':'adds a question',
-                'Answer':'adds a answer',
+                'Answer':'adds an answer',
                 'Comment':'adds a comment',
-                'Upvote':'upvotes for this answer'}
+                'Upvote':'upvotes this answer'}
         for k,v in desc.items():
             q = Desc.query.filter_by(name = k).first()
             if q is None:

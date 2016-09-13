@@ -1,7 +1,12 @@
-Flasky
+Zifu
 ======
 
-This repository contains the source code examples for my O'Reilly book [Flask Web Development](http://www.flaskbook.com).
+此Demo以　https://github.com/miguelgrinberg/flasky　为base，模仿了____的部分功能
 
-The commits and tags in this repository were carefully created to match the sequence in which concepts are presented in the book. Please read the section titled "How to Work with the Example Code" in the book's preface for instructions.
+支持用户注册，关注其他用户
 
+用户可以浏览所有问题、答案和评论，添加问题、答案和评论，赞同或者反对答案
+
+用户可以修改自己添加的问题和答案
+
+根据用户的关注生成timeline，基于用户的动态生成通知

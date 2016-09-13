@@ -69,13 +69,13 @@ def index():
 @main.route('/user/<username>')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    page = request.args.get('page', 1, type=int)
-    pagination = user.questions.order_by(Question.timestamp.desc()).paginate(
-        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
-        error_out=False)
-    posts = pagination.items
-    return render_template('user.html', user=user, posts=posts,
-                           pagination=pagination)
+    context = user.profile_context
+    # page = request.args.get('page', 1, type=int)
+    # pagination = user.questions.order_by(Question.timestamp.desc()).paginate(
+    #     page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
+    #     error_out=False)
+    # posts = pagination.items
+    return render_template('user.html', user=user, feeds=context)
 
 
 @main.route('/edit-profile', methods=['GET', 'POST'])
@@ -168,9 +168,9 @@ def answer(id):
 
 
 
-@main.route('/edit/<int:id>', methods=['GET', 'POST'])
+@main.route('/edit/q/<int:id>', methods=['GET', 'POST'])
 @login_required
-def edit(id):
+def edit_question(id):
     q = Question.query.get_or_404(id)
     if current_user != q.author and \
             not current_user.can(Permission.ADMINISTER):
@@ -182,6 +182,22 @@ def edit(id):
         flash('The question has been updated.')
         return redirect(url_for('.question', id=q.id))
     form.body.data = q.body
+    return render_template('edit_post.html', form=form)
+
+@main.route('/edit/a/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_answer(id):
+    a = Answer.query.get_or_404(id)
+    if current_user != a.author and \
+            not current_user.can(Permission.ADMINISTER):
+        abort(403)
+    form = AnswerForm()
+    if form.validate_on_submit():
+        a.body = form.body.data
+        db.session.add(a)
+        flash('The question has been updated.')
+        return redirect(url_for('.answer', id=a.id))
+    form.body.data = a.body
     return render_template('edit_post.html', form=form)
 
 
