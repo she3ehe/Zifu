@@ -7,7 +7,7 @@ from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, QuestionForm,\
     AnswerForm, CommentForm
 from .. import db
-from ..models import Permission, Role, User, Question, Answer, Comment, Desc, Upvote
+from ..models import Permission, Role, User, Question, Answer, Comment, Desc, Upvote, Fav
 from ..decorators import admin_required, permission_required
 from PIL import Image
 from werkzeug import secure_filename
@@ -177,8 +177,9 @@ def edit_question(id):
         abort(403)
     form = QuestionForm()
     if form.validate_on_submit():
-        q.body = form.body.data
-        db.session.add(q)
+        # q.body = form.body.data
+        # db.session.add(q)
+        q.update_question(form.body.data)
         flash('The question has been updated.')
         return redirect(url_for('.question', id=q.id))
     form.body.data = q.body
@@ -287,7 +288,7 @@ def upvote(ans_id):
 def downvote(ans_id):
     answer = Answer.query.filter_by(id=ans_id).first()
     if answer is None:
-        flash('Invalid Question.')
+        flash('Invalid answer.')
         return redirect(redirect_url())
     author = current_user._get_current_object()
     if current_user.has_downvoted(answer):
@@ -306,6 +307,46 @@ def notification(id):
     # u = User.query.get(id)
     # n = u.notification
     return render_template('notification.html',infos=n)
+
+@main.route('/fav')
+@login_required
+def favor():
+    f = current_user.favor
+    return render_template('fav.html',infos=f)
+
+@main.route('/fav/<int:id>')
+@login_required
+def add_favor(id):
+    author = current_user._get_current_object()
+    answer = Answer.query.get(id)
+    if answer is None:
+        flash('Invalid answer.')
+        return redirect(redirect_url())
+    query = Fav.query.filter_by(answer=answer,author=author).first()
+    if query is not None:
+        flash('You has favored this answer.')
+        return redirect(redirect_url())
+    f = Fav(answer=answer,author=author)
+    db.session.add(f)
+    db.session.commit()
+    return redirect(redirect_url())
+
+@main.route('/unfav/<int:id>')
+@login_required
+def delete_favor(id):
+    author = current_user._get_current_object()
+    answer = Answer.query.get(id)
+    if answer is None:
+        flash('Invalid answer.')
+        return redirect(redirect_url())
+    query = Fav.query.filter_by(answer=answer,author=author).first()
+    if query is None:
+        return redirect(redirect_url())
+    db.session.delete(query)
+    db.session.commit()
+    return redirect(redirect_url())
+
+
 
 @main.route('/all')
 @login_required

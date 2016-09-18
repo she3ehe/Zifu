@@ -37,6 +37,15 @@
                 <a href="{{ url_for('.answer', id=info.id) }}">
                     <span class="label label-default">Full answer</span>
                 </a>
+                {% if current_user.has_favor(answer_id=info.id) %}
+                <a href="{{ url_for('.delete_favor', id=info.id) }}">
+                    <span class="label label-primary">UnFav</span>
+                </a>
+                {% else %}
+                <a href="{{ url_for('.add_favor', id=info.id) }}">
+                    <span class="label label-primary">Fav</span>
+                </a>
+                {% endif %}
                 <a href="{{ url_for('.answer', id=info.id) }}#comments">
                     <span class="label label-primary">{{ info.abs_upvote() }} Upvotes</span>
                 <a href="{{ url_for('.answer', id=info.id) }}#comments">
@@ -81,6 +90,15 @@
                 <a href="{{ url_for('.answer', id=info.answer.id) }}">
                     <span class="label label-default">Full answer</span>
                 </a>
+                {% if current_user.has_favor(answer_id=info.answer.id) %}
+                <a href="{{ url_for('.delete_favor', id=info.answer.id) }}">
+                    <span class="label label-primary">UnFav</span>
+                </a>
+                {% else %}
+                <a href="{{ url_for('.add_favor', id=info.answer.id) }}">
+                    <span class="label label-primary">Fav</span>
+                </a>
+                {% endif %}
                 <a href="{{ url_for('.answer', id=info.answer.id) }}#comments">
                     <span class="label label-primary">{{ info.answer.abs_upvote() }} Upvotes</span>
                 </a>

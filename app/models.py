@@ -99,8 +99,8 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', backref='author', lazy='dynamic')
     questions = db.relationship('Question', backref='author', lazy='dynamic')
     answers = db.relationship('Answer', backref='author', lazy='dynamic')
-    upvotes = db.relationship('Upvote',backref='author',lazy='dynamic')
-
+    upvotes = db.relationship('Upvote', backref='author',lazy='dynamic')
+    favs    = db.relationship('Fav', backref='author', lazy='dynamic')
     @staticmethod
     def generate_fake(count=100):
         from sqlalchemy.exc import IntegrityError
@@ -306,15 +306,22 @@ class User(UserMixin, db.Model):
     def notification(self):
         n = []
     # all answers for user's questions
-        for question in self.questions:
-            for answer in question.answers:
-                n.append(answer)
-        for answer in self.answers:
-            for upvote in answer.upvotes :
-                if(upvote.value):
-                    n.append(upvote)
-            for comment in answer.comments:
-                n.append(comment)
+        # for question in self.questions:
+        #     for answer in question.answers:
+        #         n.append(answer)
+        # for answer in self.answers:
+        #     for upvote in answer.upvotes :
+        #         if(upvote.value):
+        #             n.append(upvote)
+        #     for comment in answer.comments:
+        #         n.append(comment)
+        a = Answer.query.join(Question, Question.id == Answer.question_id)\
+            .filter(Question.author_id == self.id).all()
+        u = Upvote.query.join(Answer, Answer.id == Upvote.answer_id)\
+            .filter(Answer.author_id == self.id).all()
+        c = Comment.query.join(Answer, Answer.id == Comment.answer_id)\
+            .filter(Answer.author_id == self.id).all()
+        n = a + u + c
         n.sort(key=lambda x:x.timestamp,reverse=True)
         return n
 
@@ -329,6 +336,20 @@ class User(UserMixin, db.Model):
             context.append(upvote)
         context.sort(key=lambda x:x.timestamp,reverse=True)
         return context
+
+    def has_favor(self,answer_id):
+        answer = Answer.query.get(answer_id)
+        query = Fav.query.filter_by(author=self,answer=answer).first()
+        if query is None:
+            return False
+        else:
+            return True
+
+    @property
+    def favor(self):
+        f = [x for x in self.favs]
+        f.sort(key=lambda x:x.timestamp,reverse=True)
+        return f
 
     # def to_json(self):
     #     json_user = {
@@ -409,10 +430,20 @@ class Question(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     desc_id = db.Column(db.Integer, db.ForeignKey('descs.id'))
     answers = db.relationship('Answer', backref='question', lazy='dynamic')
+    logs = db.relationship('Questionlog', backref='question', lazy='dynamic')
     def __init__(self, **kwargs):
         super(Question, self).__init__(**kwargs)
         d = Desc.query.filter_by(name='Question').first()
         self.desc = d
+
+    def update_question(self,body):
+        #generate question log while updating a question
+        qlog_count = Questionlog.query.filter_by(question_id=self.id).count()
+        log = Questionlog(question=self,body=self.body,body_html=self.body_html,timestamp=self.timestamp,edit_no=qlog_count+1)
+        db.session.add(log)
+        db.session.commit()
+        self.body = body
+        self.timestamp = datetime.utcnow()
 
     @staticmethod
     def generate_fake(count=100):
@@ -478,6 +509,7 @@ class Answer(db.Model):
     desc_id = db.Column(db.Integer, db.ForeignKey('descs.id'))
     comments = db.relationship('Comment', backref='answer', lazy='dynamic')
     upvotes  = db.relationship('Upvote',backref='answer',lazy='dynamic')
+    favs = db.relationship('Fav',backref='answer',lazy='dynamic')
 
     def __init__(self, **kwargs):
         super(Answer, self).__init__(**kwargs)
@@ -609,6 +641,54 @@ class Upvote(db.Model):
             if(query is None):
                 v = Upvote(author=u,
                            answer=a,
+                           timestamp=forgery_py.date.date(True),
                            value=1)
                 db.session.add(v)
-                db.session.commit()
+        db.session.commit()
+
+class Questionlog(db.Model):
+    #edit log for a Question
+    __tablename__ = 'questionlogs'
+    id = db.Column(db.Integer,primary_key=True)
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    edit_no = db.Column(db.Integer)
+
+    @staticmethod
+    def generate_fake(count=100):
+        from random import seed, randint
+        import forgery_py
+        seed()
+        question_count = Question.query.count()
+        for i in range(count):
+            q = Question.query.offset(randint(0,question_count-1)).first()
+            q.update_question(body=forgery_py.lorem_ipsum.sentences(randint(1, 5)))
+
+
+class Fav(db.Model):
+    # __tablename__ = 'favs'
+    id = db.Column(db.Integer,primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    answer_id = db.Column(db.Integer, db.ForeignKey('answers.id'))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    @staticmethod
+    def generate_fake(count=500):
+        from random import seed, randint
+        import forgery_py
+
+        seed()
+        user_count = User.query.count()
+        answer_count = Answer.query.count()
+        for i in range(count):
+            u = User.query.offset(randint(0, user_count - 1)).first()
+            a = Answer.query.offset(randint(0,answer_count - 1)).first()
+            query = Fav.query.filter_by(author=u, answer=a).first()
+            if(query is None):
+                v = Fav(author=u,
+                           answer=a,
+                           timestamp=forgery_py.date.date(True))
+                db.session.add(v)
+        db.session.commit()

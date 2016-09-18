@@ -1,7 +1,7 @@
 Zifu
 ======
 
-此 Demo 以 [Flasky][id] 为 base，模仿了____的部分功能
+此Demo以　https://github.com/miguelgrinberg/flasky　为base，模仿了____的部分功能
 
 支持用户注册，关注其他用户
 
@@ -10,5 +10,3 @@ Zifu
 用户可以修改自己添加的问题和答案
 
 根据用户的关注生成timeline，基于用户的动态生成通知
-
-[id]: https://github.com/miguelgrinberg/flasky  

@@ -14,7 +14,7 @@ if os.path.exists('.env'):
             os.environ[var[0]] = var[1]
 
 from app import create_app, db
-from app.models import User, Follow, Role, Permission, Question, Answer, Comment ,Desc ,Upvote
+from app.models import User, Follow, Role, Permission, Question, Answer, Comment ,Desc ,Upvote, Questionlog, Fav
 from flask.ext.script import Manager, Shell
 from flask.ext.migrate import Migrate, MigrateCommand
 
@@ -26,7 +26,8 @@ migrate = Migrate(app, db)
 def make_shell_context():
     return dict(app=app, db=db, User=User, Follow=Follow, Role=Role,
                 Permission=Permission, Question=Question, Answer=Answer,
-                Comment=Comment ,Desc = Desc ,Upvote=Upvote)
+                Comment=Comment ,Desc = Desc ,Upvote=Upvote, Questionlog=Questionlog,
+                Fav=Fav)
 manager.add_command("shell", Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
 
@@ -78,11 +79,13 @@ def deploy():
     User.generate_fake()
     # create self-follows for all users
     User.add_self_follows()
+    # generate fake follow relations,questions,answers,comments,upvotes and favs
     Follow.generate_fake()
     Question.generate_fake()
     Answer.generate_fake()
     Comment.generate_fake()
     Upvote.generate_fake()
+    Fav.generate_fake()
 
 if __name__ == '__main__':
     manager.run()
