@@ -431,6 +431,8 @@ class Question(db.Model):
     desc_id = db.Column(db.Integer, db.ForeignKey('descs.id'))
     answers = db.relationship('Answer', backref='question', lazy='dynamic')
     logs = db.relationship('Questionlog', backref='question', lazy='dynamic')
+    registers  = db.relationship('Register',backref='question',lazy='dynamic')
+
     def __init__(self, **kwargs):
         super(Question, self).__init__(**kwargs)
         d = Desc.query.filter_by(name='Question').first()
@@ -444,6 +446,22 @@ class Question(db.Model):
         db.session.commit()
         self.body = body
         self.timestamp = datetime.utcnow()
+
+    @property
+    def show_topics(self):
+        t = [x.topic for x in self.registers]
+        t.sort(key=lambda x:x.timestamp,reverse=True)
+        return t
+
+    def add_topic(self,name):
+        topic = Topic.query.filter_by(name=name).first()
+        if topic is None:
+            topic = Topic(name=name)
+            db.session.add(topic)
+            db.session.commit()
+        query = Register.query.filter_by(topic=topic,question=self).first()
+        if query is None:
+            Register(question=self,topic=topic)
 
     @staticmethod
     def generate_fake(count=100):
@@ -467,9 +485,6 @@ class Question(db.Model):
                         'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
                         'h1', 'h2', 'h3', 'p','img']
         allowed_attrs = {'img': ['src', 'alt']}
-#        target.body_html = bleach.linkify(bleach.clean(
-#            markdown(value, output_format='html'),
-#            tags=allowed_tags, strip=True))
         target.body_html = bleach.linkify(bleach.clean(
             markdown(value, output_format='html'),
             tags=allowed_tags, strip=True, attributes=allowed_attrs))
@@ -692,3 +707,28 @@ class Fav(db.Model):
                            timestamp=forgery_py.date.date(True))
                 db.session.add(v)
         db.session.commit()
+
+class Topic(db.Model):
+    __tablename__ = 'topics'
+    id = db.Column(db.Integer,primary_key=True)
+    name = db.Column(db.Text)
+    registers  = db.relationship('Register',backref='topic',lazy='dynamic')
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    @property
+    def feeds(self):
+        f = []
+        questions = [x.question for x in self.registers]
+        for q in questions:
+            for a in q.answers:
+                f.append(a)
+        f += questions
+        f.sort(key=lambda x:x.timestamp,reverse=True)
+        return f
+
+class Register(db.Model):
+    __tablename__ = 'registers'
+    id = db.Column(db.Integer,primary_key=True)
+    topic_id = db.Column(db.Integer, db.ForeignKey('topics.id'))
+    answer_id = db.Column(db.Integer, db.ForeignKey('questions.id'))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)

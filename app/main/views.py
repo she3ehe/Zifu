@@ -5,9 +5,9 @@ from flask.ext.login import login_required, current_user
 from flask.ext.sqlalchemy import get_debug_queries
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, QuestionForm,\
-    AnswerForm, CommentForm
+    AnswerForm, CommentForm, TopicForm
 from .. import db
-from ..models import Permission, Role, User, Question, Answer, Comment, Desc, Upvote, Fav
+from ..models import Permission, Role, User, Question, Answer, Comment, Desc, Upvote, Fav, Topic
 from ..decorators import admin_required, permission_required
 from PIL import Image
 from werkzeug import secure_filename
@@ -143,6 +143,16 @@ def question(id):
     answers = pagination.items
     return render_template('question.html', question=q, form=form,
                            answers=answers, pagination=pagination)
+
+@main.route('/question/<int:id>/add', methods=['GET', 'POST'])
+@login_required
+def add_topic(id):
+    q = Question.query.get_or_404(id)
+    form = TopicForm()
+    if form.validate_on_submit():
+        q.add_topic(name=form.body.data)
+        return redirect(url_for('.question',id=id))
+    return render_template('question.html', question=q, form=form)
 
 @main.route('/answer/<int:id>', methods=['GET', 'POST'])
 def answer(id):
@@ -346,7 +356,12 @@ def delete_favor(id):
     db.session.commit()
     return redirect(redirect_url())
 
-
+@main.route('/topic/<int:id>')
+@login_required
+def topic(id):
+    topic = Topic.query.get_or_404(id)
+    f = topic.feeds
+    return render_template('topic.html', feeds=f)
 
 @main.route('/all')
 @login_required

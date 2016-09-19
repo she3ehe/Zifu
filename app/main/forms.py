@@ -62,3 +62,7 @@ class AnswerForm(Form):
 class CommentForm(Form):
     body = StringField('Enter your comment', validators=[Required()])
     submit = SubmitField('Submit')
+
+class TopicForm(Form):
+    body = StringField('Enter a topic for this question', validators=[Required()])
+    submit = SubmitField('Submit')

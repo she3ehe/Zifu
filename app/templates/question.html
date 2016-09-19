@@ -5,6 +5,19 @@
 {% block title %}Zifu - Post{% endblock %}
 
 {% block page_content %}
+<ul class="posts">
+
+
+<table border="0">
+<tr>
+  {% for topic in question.show_topics %}
+  <td><a href="{{url_for('.topic', id=topic.id) }}"> {{ topic.name }}&nbsp&nbsp&nbsp&nbsp&nbsp</a>
+  </td>
+  {% endfor%}
+
+</tr>
+</table>
+
 <div class="post-thumbnail">
     <a href="{{ url_for('.user', username=question.author.username) }}">
         {% if question.author.use_default_avatar %}
@@ -15,6 +28,7 @@
 
     </a>
 </div>
+
 <li class="posts">
   <div class="post-content">
       <div class="post-date">{{ moment(question.timestamp).fromNow() }}</div>
@@ -26,7 +40,15 @@
                 {{ question.body }}
             {% endif %}
       </div>
+      <div class="post-footer">
+        <a href="{{ url_for('.add_topic', id=question.id) }}">
+            <span class="label label-primary">add</span>
+        </a>
+      </div>
 </li>
+</ul>
+
+<ul class="posts">
 
 <h4 id="comments">Answers</h4>
 {% if current_user.can(Permission.COMMENT) %}
