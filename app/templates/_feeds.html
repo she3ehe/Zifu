@@ -91,6 +91,7 @@
                 <a href="{{ url_for('.answer', id=feed.id) }}">
                     <span class="label label-default">Full answer</span>
                 </a>
+                {% if current_user.is_authenticated%}
                 {% if current_user.has_favor(answer_id=feed.id) %}
                 <a href="{{ url_for('.delete_favor', id=feed.id) }}">
                     <span class="label label-primary">UnFav</span>
@@ -100,6 +101,7 @@
                     <span class="label label-primary">Fav</span>
                 </a>
                 {% endif %}
+                {% endif%}
                 <a href="{{ url_for('.answer', id=feed.id) }}#comments">
                     <span class="label label-primary">{{ feed.abs_upvote() }} Upvotes</span>
                 </a>
@@ -152,6 +154,7 @@
                 <a href="{{ url_for('.answer', id=feed.answer.id) }}">
                     <span class="label label-default">Full answer</span>
                 </a>
+                {% if current_user.is_authenticated%}
                 {% if current_user.has_favor(answer_id=feed.answer.id) %}
                 <a href="{{ url_for('.delete_favor', id=feed.answer.id) }}">
                     <span class="label label-primary">UnFav</span>
@@ -161,7 +164,7 @@
                     <span class="label label-primary">Fav</span>
                 </a>
                 {% endif %}
-
+                {% endif %}
                 <a href="{{ url_for('.answer', id=feed.answer.id) }}#comments">
                     <span class="label label-primary">{{ feed.answer.abs_upvote() }} Upvotes</span>
                 </a>
